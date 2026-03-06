@@ -11490,13 +11490,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4636f3920c72b0c458f938cb4b262d93, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Transcribe
-  model: whisper-1
+  model: gpt-4o-transcribe
   translate: 0
   silenceThreshold: 0.02
   minSilenceLength: 1
   preferredDeviceNames:
-  - OCULUS
-  - REALTEK
+  - HyperX
+  - 
   canRecord: 1
   dialogueManager: {fileID: 347361753}
   languageMode: 0
@@ -11528,7 +11528,7 @@ MonoBehaviour:
     \"emotion\"\r\n            ],\r\n            \"additionalProperties\": false\r\n       
     },\r\n        \"strict\": true\r\n    }"
   systemPromptAsset: {fileID: 4900000, guid: 0744be8f8565e6a4e8c35c6d487c2da9, type: 3}
-  animator: {fileID: 0}
+  animator: {fileID: 5866666019853322228}
   PlayEmotionAnimations: 1
 --- !u!1 &355034716
 GameObject:

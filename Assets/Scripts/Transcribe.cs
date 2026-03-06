@@ -14,7 +14,7 @@ public class Transcribe : MonoBehaviour
 {
     [Header("Model Settings")]
     private string apiKey;
-    [SerializeField] private string model = "whisper-1";
+    [SerializeField] private string model = "gpt-4o-transcribe";
     [SerializeField] private bool translate = false;        // If true, the audio will be translated to English
 
     private const int CLIP_LENGTH = 20;
@@ -71,6 +71,7 @@ public class Transcribe : MonoBehaviour
     private string GetLanguageCode(LanguageMode mode) => LanguageCodes.TryGetValue(mode, out var code) ? code : null;
 
     private Coroutine stopButtonCoroutine;
+    private bool isUploading = false;
 
     void Start()
     {
@@ -91,6 +92,7 @@ public class Transcribe : MonoBehaviour
     void OnDestroy()
     {
         TextToSpeech.OnAudioPlayback -= HandleAudioPlayback;
+        LLMDialogueManager.OnGenerationFailed -= HandleGenerationResult;
     }
 
     private void HandleAudioPlayback(bool isPlaying)
@@ -223,13 +225,16 @@ public class Transcribe : MonoBehaviour
 
     private void StopRecording()
     {
-        if (isRecording)
+        if (!isRecording)
         {
-            Debug.Log("-> StopRecording() - " + PrintAudioClipDetail(audioClip));
-            Microphone.End(deviceName);
-            audioClip.name = "Recording";
-            isRecording = false;
+            Debug.LogWarning("StopRecording called while not recording. Ignored.");
+            return;
         }
+
+        Debug.Log("-> StopRecording() - " + PrintAudioClipDetail(audioClip));
+        Microphone.End(deviceName);
+        audioClip.name = "Recording";
+        isRecording = false;
         TrimSilence();
 
         if (audioClip.channels > 1)
@@ -242,6 +247,14 @@ public class Transcribe : MonoBehaviour
         if (audioClip.length < 1.0f)
         {
             Debug.LogWarning("Audio is too short to upload");
+            canRecord = true;
+            return;
+        }
+
+        if (isUploading)
+        {
+            Debug.LogWarning("Upload already in progress, skipping this recording.");
+            canRecord = true;
             return;
         }
 
@@ -358,6 +371,7 @@ public class Transcribe : MonoBehaviour
 
     IEnumerator UploadRecording()
     {
+        isUploading = true;
         string filePath = Path.Combine(Application.persistentDataPath, "recorded.wav");
         SaveWav(filePath, audioClip);
 
@@ -390,7 +404,7 @@ public class Transcribe : MonoBehaviour
             {
                 Debug.Log("Transcribe success");
                 string result = request.downloadHandler.text;
-                Debug.Log("Returned Json£º" + result);   // Display the JSON
+                Debug.Log("Returned Jsonï¿½ï¿½" + result);   // Display the JSON
 
                 // The result is in JSON format, this is to parse it to extract the transcribed text
                 // Details of FromJson https://docs.unity3d.com/ScriptReference/JsonUtility.FromJson.html
@@ -399,7 +413,7 @@ public class Transcribe : MonoBehaviour
                 // Trigger dialogue generation if the transcription is successful
                 if (response != null && !string.IsNullOrEmpty(response.text))
                 {
-                    Debug.Log("Extracted text£º" + response.text);   //Display the actual text
+                    Debug.Log("Extracted textï¿½ï¿½" + response.text);   //Display the actual text
                     dialogueManager.GenerateDialogue(response.text);
                 }
                 else
@@ -411,7 +425,22 @@ public class Transcribe : MonoBehaviour
             else
             {
                 canRecord = true;
-                Debug.LogError("Transcribe failed " + request.error);
+                string responseBody = request.downloadHandler != null ? request.downloadHandler.text : "<no-body>";
+                string requestId = request.GetResponseHeader("x-request-id");
+                string limitReq = request.GetResponseHeader("x-ratelimit-limit-requests");
+                string remainReq = request.GetResponseHeader("x-ratelimit-remaining-requests");
+                string resetReq = request.GetResponseHeader("x-ratelimit-reset-requests");
+
+                Debug.LogError(
+                    "Transcribe failed " +
+                    $"status={(int)request.responseCode} " +
+                    $"error={request.error} " +
+                    $"x-request-id={requestId} " +
+                    $"rate-limit={limitReq} " +
+                    $"remaining={remainReq} " +
+                    $"reset={resetReq} " +
+                    $"body={responseBody}"
+                );
             }
 
             if (File.Exists(filePath))
@@ -419,6 +448,7 @@ public class Transcribe : MonoBehaviour
                 File.Delete(filePath);
             }
         }
+        isUploading = false;
         
     }
 
