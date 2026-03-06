@@ -1,7 +1,9 @@
-# VR Session With Multilingual Virtual Agent
-This is a VR icebreaker session with a multilingual conversational virtual agent aimed to reduce foreign language anxiety for non-native speaker by allowing them to speak casually using their mother tongue while listening the virtual agent's speech in the target language (English by default).
+# Virtual Session With Multilingual Virtual Agent
+This is a virtual icebreaker session with a multilingual conversational virtual agent aimed to reduce foreign language anxiety for non-native speaker by allowing them to speak casually using their mother tongue while listening the virtual agent's speech in the target language (English by default).
 
 Talk to the agent like **using a walkie talkie** - press and hold the talk button (A button on the Oculus right controller by default) to speak, release when you want to finish.
+
+There are two scenes for VR and non-vr
 
 # Setup instructions
 Most of the scripts that requires setting up were attached to the AIManager object in the scene. Additionally, the gaze model was attached to the avatar's root and the lip-sync attached to it's head.
@@ -11,6 +13,7 @@ This project is based on OpenAI's online service, so an OpenAI API key is requir
 For simplicity, the project keeps the API key with a local parameter instead of reading it through an environment variable.
 *Some extra caution is advised to prevent key leak!*
 
+You can purchase an API key from: https://platform.openai.com/
 To start, go to Assets/Scripts/APIKeys.cs and replace the string with your own key.
 
 ### IMPORTANT SAFTY WARNING
