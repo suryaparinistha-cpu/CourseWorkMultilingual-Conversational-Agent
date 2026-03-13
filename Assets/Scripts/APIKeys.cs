@@ -14,7 +14,6 @@ public class APIKeys : MonoBehaviour
     /// <summary>
     /// Don't forget to put in your OpenAI API Key
     /// </summary>
-    private string apiKey = "Your API Keys Here!";
 
     public static string APIKey => Instance.apiKey;
 

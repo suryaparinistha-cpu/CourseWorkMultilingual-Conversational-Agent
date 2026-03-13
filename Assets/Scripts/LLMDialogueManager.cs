@@ -1,4 +1,4 @@
-using System;
+锘縰sing System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -63,6 +63,7 @@ public class LLMDialogueManager : MonoBehaviour
         ""strict"": true
     }";
     [SerializeField] private TextAsset systemPromptAsset; // Write system promt in a txt file and assign it in the inspector
+    [SerializeField] private AgentLanguage agentLanguage = AgentLanguage.English;
     private string systemPrompt;
 
     private bool canGenerateDialogue = true;
@@ -84,6 +85,22 @@ public class LLMDialogueManager : MonoBehaviour
         surprised,
         confused
     }
+
+    public enum AgentLanguage
+    {
+        English,
+        Spanish,
+        French,
+        German,
+        Italian,
+        Portuguese,
+        Hindi,
+        Japanese,
+        Korean,
+        ChineseSimplified,
+        Catalan
+    }
+
     string emotionCache;
 
     private void Start()
@@ -94,7 +111,7 @@ public class LLMDialogueManager : MonoBehaviour
         // Check if a system prompt is assigned
         if (systemPromptAsset != null)
         {
-            systemPrompt = systemPromptAsset.text;
+            systemPrompt = BuildSystemPrompt();
             // Add system prompt to the conversation history
             conversationHistory.Add(new Message { role = "developer", content = systemPrompt });
         }
@@ -157,7 +174,7 @@ public class LLMDialogueManager : MonoBehaviour
 
         string jsonPayload = JsonConvert.SerializeObject(requestData, Formatting.Indented);
 
-        using (UnityWebRequest request = new UnityWebRequest(apiUrl, "POST")) //虽然UnityEngine.Networking已经包含了UnityWebRequest，但这里使用using语句来管理其生命周期！！！
+        using (UnityWebRequest request = new UnityWebRequest(apiUrl, "POST")) //脣盲脠禄UnityEngine.Networking脪脩戮颅掳眉潞卢脕脣UnityWebRequest拢卢碌芦脮芒脌茂脢鹿脫脙using脫茂戮盲脌麓鹿脺脌铆脝盲脡煤脙眉脰脺脝脷拢隆拢隆拢隆
         {
             byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonPayload);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -211,7 +228,7 @@ public class LLMDialogueManager : MonoBehaviour
                 string npcReply = actualResponse.content;
                 string emotion = actualResponse.emotion;
 
-                // 更新对话历史
+                // 赂眉脨脗露脭禄掳脌煤脢路
                 conversationHistory.Add(new Message { role = "assistant", content = npcReply });
 
                 HandleRespond(npcReply, emotion);
@@ -246,11 +263,48 @@ public class LLMDialogueManager : MonoBehaviour
         return rawNpcReply.Substring(jsonStart, jsonEnd - jsonStart + 1);
     }
 
+    private string BuildSystemPrompt()
+    {
+        return $"You always speak in {GetLanguagePromptLabel(agentLanguage)}. {systemPromptAsset.text}";
+    }
+
+    private string GetLanguagePromptLabel(AgentLanguage language)
+    {
+        switch (language)
+        {
+            case AgentLanguage.English:
+                return "English";
+            case AgentLanguage.Spanish:
+                return "Spanish";
+            case AgentLanguage.French:
+                return "French";
+            case AgentLanguage.German:
+                return "German";
+            case AgentLanguage.Italian:
+                return "Italian";
+            case AgentLanguage.Portuguese:
+                return "Portuguese";
+            case AgentLanguage.Hindi:
+                return "Hindi";
+            case AgentLanguage.Japanese:
+                return "Japanese";
+            case AgentLanguage.Korean:
+                return "Korean";
+            case AgentLanguage.ChineseSimplified:
+                return "Simplified Chinese";
+            case AgentLanguage.Catalan:
+                return "Catalan";
+            default:
+                return language.ToString();
+        }
+    }
+
     // Call this method to clear the conversation history when needed
     public void ClearConversation()
     {
         conversationHistory.Clear();
-        conversationHistory.Add(new Message { role = "system", content = systemPrompt });
+        systemPrompt = BuildSystemPrompt();
+        conversationHistory.Add(new Message { role = "developer", content = systemPrompt });
     }
 
     public void HandleEmotion(string emotion)
